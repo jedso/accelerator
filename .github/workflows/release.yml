@@ -44,19 +44,16 @@ jobs:
           zip -r ${LINUX_ZIP} linux
 
           echo "LINUX_ZIP=${LINUX_ZIP}" >> $GITHUB_ENV
+          echo "RELEASE_TAG=v$PRODUCT_VERSION-git$REV_COUNT" >> $GITHUB_ENV
+          echo "RELEASE_NAME=${{ env.PROJECT }} v$PRODUCT_VERSION (git$REV_COUNT-$REV_SHA)" >> $GITHUB_ENV
 
-      - name: Upload release
-        if: ${{ secrets.UPLOAD_PASSWORD != '' }}
-        shell: bash
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "Begin upload for branch (${{ github.ref_name }})"
-          AUTHORIZATION="$(echo -n 'builds:${{ secrets.UPLOAD_PASSWORD }}' | base64 -w 0)"
-          echo "::add-mask::${AUTHORIZATION}"
-
-          echo "Uploading ${{ env.LINUX_ZIP }}"
-          HTTP_CODE=$(curl -XPOST -H "Authorization: Basic ${AUTHORIZATION}" -H "Content-Type: application/zip" --output /dev/null --silent --write-out "%{http_code}" --data-binary "@${{ env.LINUX_ZIP }}" "https://builds.limetech.io/upload.php?project=${{ env.PROJECT }}&branch=${{ github.ref_name }}&filename=${{ env.LINUX_ZIP }}")
-          if test ${HTTP_CODE} -ne 200; then
-            echo "Upload failed with HTTP Code: ${HTTP_CODE}"
-            exit 1
-          fi
-          echo "Upload successful!"
+          gh release create "${{ env.RELEASE_TAG }}" \
+            --repo "${{ github.repository }}" \
+            --title "${{ env.RELEASE_NAME }}" \
+            --notes "Automated release from branch \`${{ github.ref_name }}\`." \
+            --prerelease \
+            "${{ env.LINUX_ZIP }}"

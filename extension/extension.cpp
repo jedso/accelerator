@@ -481,10 +481,6 @@ class UploadThread: public IThread
 					break;
 			}
 
-			if (metapath[0]) {
-				unlink(metapath);
-			}
-
 			if (log) fflush(log);
 
 			dumps->NextEntry();

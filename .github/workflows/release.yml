@@ -46,10 +46,11 @@ jobs:
           echo "LINUX_ZIP=${LINUX_ZIP}" >> $GITHUB_ENV
 
       - name: Upload release
+        if: ${{ secrets.UPLOAD_PASSWORD != '' }}
         shell: bash
         run: |
           echo "Begin upload for branch (${{ github.ref_name }})"
-          AUTHORIZATION="$(echo -n 'builds:${{ secrets.UPLOAD_PASSWORD }}' | base64)"
+          AUTHORIZATION="$(echo -n 'builds:${{ secrets.UPLOAD_PASSWORD }}' | base64 -w 0)"
           echo "::add-mask::${AUTHORIZATION}"
 
           echo "Uploading ${{ env.LINUX_ZIP }}"
